@@ -1,0 +1,9 @@
+{
+  "cleanUrls": true,
+  "headers": [
+    {
+      "source": "/(index.html|flutter_service_worker.js|flutter_bootstrap.js|version.json|manifest.json)",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+    }
+  ]
+}
