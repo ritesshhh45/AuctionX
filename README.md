@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # BidLeague Online (Flutter + Supabase), Phase 1
 
 ## 1. Backend (once)
@@ -104,6 +103,4 @@ animated bid price. Players tab: tap a photo circle to add a photo. Registration
 ## v12: animated intro + registration link
 lib/splash.dart: lights on, golden hammer strike, emblem reveal (assets/emblem.png), BidLeague name shine, zoom into the app (about 2.8 s, shown once at start,
 respects reduced motion, never blocks the app). Link tab now starts with a Player registration link card: copy, share, open, QR, open/closed switch.
-=======
-# AuctionX
->>>>>>> 7378ffc569f99a91250db38bc147a948a5e7289a
+
