@@ -1,6 +1,6 @@
 {
-    "name": "bidleague_online",
-    "short_name": "bidleague_online",
+    "name": "auctionx",
+    "short_name": "auctionx",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#10111D",

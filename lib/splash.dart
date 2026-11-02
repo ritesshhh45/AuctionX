@@ -15,7 +15,7 @@ const _brandStyle = TextStyle(
 );
 
 /// Premium intro (about 2.8 s): stadium lights on, golden hammer strikes, emblem is revealed,
-/// the BidLeague name shines in, then the logo zooms through into the app.
+/// the AuctionX name shines in, then the logo zooms through into the app.
 /// It sits on top of the already-loading app, so a slow start never delays the app.
 class IntroSplash extends StatefulWidget {
   final VoidCallback onDone;
@@ -64,7 +64,7 @@ class _IntroSplashState extends State<IntroSplash> with SingleTickerProviderStat
           shaderCallback: (r) => const LinearGradient(
                   begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFFFFE9A8), kGold, Color(0xFF9A6A1C)])
               .createShader(r),
-          child: const Text('Bid', style: _brandStyle),
+          child: const Text('Auction', style: _brandStyle),
         ),
         ShaderMask(
           shaderCallback: (r) => LinearGradient(
@@ -73,7 +73,7 @@ class _IntroSplashState extends State<IntroSplash> with SingleTickerProviderStat
             colors: const [Color(0xFFD62828), Colors.white, Color(0xFFD62828)],
             stops: const [0.25, 0.5, 0.75],
           ).createShader(r),
-          child: const Text('League', style: _brandStyle),
+          child: const Text('X', style: _brandStyle),
         ),
       ]);
 

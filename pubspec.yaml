@@ -1,5 +1,5 @@
-name: bidleague_online
-description: BidLeague cricket player auction (Flutter + Supabase)
+name: auctionx
+description: AuctionX cricket player auction (Flutter + Supabase)
 publish_to: none
 version: 1.0.0+1
 environment:

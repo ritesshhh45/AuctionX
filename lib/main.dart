@@ -27,11 +27,11 @@ Future<void> main() async {
     return;
   }
   await Supabase.initialize(url: _url, anonKey: _key);
-  runApp(const BidLeagueApp());
+  runApp(const AuctionXApp());
 }
 
-class BidLeagueApp extends StatelessWidget {
-  const BidLeagueApp({super.key});
+class AuctionXApp extends StatelessWidget {
+  const AuctionXApp({super.key});
   @override
   Widget build(BuildContext context) => MaterialApp(
         title: kAppName,

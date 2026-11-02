@@ -1,13 +1,13 @@
-# BidLeague Online (Flutter + Supabase), Phase 1
+# AuctionX Online (Flutter + Supabase), Phase 1
 
 ## 1. Backend (once)
 1. Create a free project at supabase.com.
-2. SQL editor: run the schema, step_for() and place_bid() from the BidLeague doc, THEN sql/02_functions_and_rls.sql.
+2. SQL editor: run the schema, step_for() and place_bid() from the AuctionX doc, THEN sql/02_functions_and_rls.sql.
 3. Authentication > Providers > Email: switch "Confirm email" OFF while testing.
 4. Project Settings > API: copy the Project URL and the anon public key.
 
 ## 2. App
-  flutter create --org com.yourname --project-name bidleague_online .
+  flutter create --org com.yourname --project-name auctionx .
   (delete test/widget_test.dart)
   flutter pub get
   dart run flutter_launcher_icons
@@ -35,9 +35,9 @@ Pick your own package id and keystore. Gate auctions behind payment. Hide player
   optional auto-sold (organizer's console must stay open; it uses the device clock).
 - Run sql/03_phase2.sql in Supabase.
 
-## BidAuction UI (v3)
+## AuctionX UI (v3)
 Home (today's auctions, Create Auction, View Auction by code, Captain panel), My Auction, Bookmarks, Auctioneer (placeholder), Profile.
-Run sql/04_create_auction.sql in Supabase. App label on the phone: edit android/app/src/main/AndroidManifest.xml (android:label=\"BidAuction\").
+Run sql/04_create_auction.sql in Supabase. App label on the phone: edit android/app/src/main/AndroidManifest.xml (android:label=\"AuctionX\").
 
 ## Phase 3
 - Players: tap "Add players" and paste many lines ("Name, role, base price"). Teams: paste many names, one per line.
@@ -76,10 +76,10 @@ My Bookmark, Pricing, Auctioneers, Join as player, View Auction, About Us, Tutor
 3. Copy the https://....vercel.app address: put it in lib/config.dart as kWebBase, add it to Supabase Authentication > URL Configuration > Redirect URLs,
    and to Google Cloud OAuth client > Authorized JavaScript origins. Rebuild and deploy again.
 4. Links then work: <site>/#/view/CODE (projector), <site>/#/register/CODE (player form), <site>/#/manage/CODE (organizer).
-5. Edit web/index.html <title> and web/manifest.json name to BidAuction; run dart run flutter_launcher_icons to refresh web icons.
+5. Edit web/index.html <title> and web/manifest.json name to AuctionX; run dart run flutter_launcher_icons to refresh web icons.
 
 ## Brand + theme (v7)
-App name BidLeague, icon assets/icon.png (launcher/web icon), small in-app logo assets/logo.png, banner assets/banner.jpg (splash + login).
+App name AuctionX, icon assets/icon.png (launcher/web icon), small in-app logo assets/logo.png, banner assets/banner.jpg (splash + login).
 Premium Dark theme: background #10111D, gold #DDB65B, purple #6D42C1, white text. Colours live in lib/theme.dart (kBg, kCard, kText, kGold, kPurple).
 Run: dart run flutter_launcher_icons (refreshes the app icon), then deploy.bat.
 
@@ -101,6 +101,6 @@ Create Auction: players per team, venue, point system, remote team bidding, visi
 animated bid price. Players tab: tap a photo circle to add a photo. Registration is a stand-alone page with a success screen. Run sql/09_create_extras.sql first.
 
 ## v12: animated intro + registration link
-lib/splash.dart: lights on, golden hammer strike, emblem reveal (assets/emblem.png), BidLeague name shine, zoom into the app (about 2.8 s, shown once at start,
+lib/splash.dart: lights on, golden hammer strike, emblem reveal (assets/emblem.png), AuctionX name shine, zoom into the app (about 2.8 s, shown once at start,
 respects reduced motion, never blocks the app). Link tab now starts with a Player registration link card: copy, share, open, QR, open/closed switch.
 

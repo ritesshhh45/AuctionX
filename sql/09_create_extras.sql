@@ -1,4 +1,4 @@
--- BidLeague v11. Run in the "Bid league" Supabase project (olaubcixtxsnkjiovucz) BEFORE running the new app. Safe to run again.
+-- AuctionX v11. Run in the "Bid league" Supabase project (olaubcixtxsnkjiovucz) BEFORE running the new app. Safe to run again.
 alter table tournaments add column if not exists point_system text default 'Points';
 alter table tournaments add column if not exists remote_bidding boolean default true;
 alter table tournaments add column if not exists visibility text default 'public';

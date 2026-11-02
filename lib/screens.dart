@@ -507,7 +507,7 @@ Future<void> captainAccess(BuildContext c, Map<String, dynamic> team) async {
   });
   if (code.isEmpty || !c.mounted) return;
   final taken = team['captain_user_id'] != null;
-  final text = 'Join "$auction" as captain of ${team['name']} on BidLeague.\nCaptain code: $code\nTeam PIN: $pin\nOpen the app, then Join as captain.';
+  final text = 'Join "$auction" as captain of ${team['name']} on AuctionX.\nCaptain code: $code\nTeam PIN: $pin\nOpen the app, then Join as captain.';
   await showDialog(
     context: c,
     builder: (d) => AlertDialog(

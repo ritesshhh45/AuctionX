@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-const kAppName = 'BidLeague';
+const kAppName = 'AuctionX';
 const kPrice = 2499; // organizer plan, per tournament
 
 SupabaseClient get db => Supabase.instance.client;

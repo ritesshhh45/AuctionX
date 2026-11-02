@@ -1,4 +1,4 @@
--- Run AFTER the schema, step_for() and place_bid() from the BidLeague doc.
+-- Run AFTER the schema, step_for() and place_bid() from the AuctionX doc.
 create function is_owner(t uuid) returns boolean language sql stable security definer set search_path = public as $$
   select exists (select 1 from tournaments where id = t and owner_id = auth.uid()) $$;
 

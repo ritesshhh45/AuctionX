@@ -1,4 +1,4 @@
--- BidLeague repair + upgrade. Run in the "Bid league" Supabase project (olaubcixtxsnkjiovucz). Safe to run again.
+-- AuctionX repair + upgrade. Run in the "Bid league" Supabase project (olaubcixtxsnkjiovucz). Safe to run again.
 
 -- columns the app uses
 alter table players add column if not exists sold_at timestamptz;

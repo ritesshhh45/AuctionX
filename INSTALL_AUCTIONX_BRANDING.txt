@@ -1,0 +1,24 @@
+AuctionX branding patch (changes only)
+
+This ZIP contains only replacement/addition files. It does not contain your full project.
+
+1. Extract this ZIP.
+2. Copy the contents of the extracted folder into your existing Flutter project root:
+   C:\websites\bidleague_online
+   Choose Replace when Windows asks.
+3. In VS Code terminal, run:
+   flutter pub get
+   dart run flutter_launcher_icons
+   flutter clean
+   flutter pub get
+   flutter run
+
+What this changes:
+- App display name to AuctionX (Android, iOS, web/PWA and Flutter title)
+- Replaces app/logo/splash artwork with your supplied AuctionX logo
+- Updates the captain invite message to say AuctionX
+
+Important:
+- Internal Dart package name and Android applicationId are intentionally unchanged to avoid breaking imports,
+  Supabase/deep links, and existing installs. The visible app name is AuctionX.
+- No Supabase configuration, source features, or project secrets are included or changed.

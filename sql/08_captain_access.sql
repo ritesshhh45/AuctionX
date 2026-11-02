@@ -1,4 +1,4 @@
--- BidLeague captain access. Run in the "Bid league" Supabase project (olaubcixtxsnkjiovucz). Safe to run again.
+-- AuctionX captain access. Run in the "Bid league" Supabase project (olaubcixtxsnkjiovucz). Safe to run again.
 
 -- secrets live in private tables: only the organizer can read them
 create table if not exists tournament_secrets (
