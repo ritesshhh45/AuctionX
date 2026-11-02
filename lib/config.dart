@@ -6,3 +6,4 @@ const kSupabaseAnonKey =
 // After you host the web build, put its address here (no trailing slash) so Link tab shows shareable URLs.
 const kWebBase = 'https://bidauction-lovat.vercel.app';
 const kSupportEmail = 'your-support-email@example.com';
+const kWebBase = 'https://auctionx-ritesh-s-projects14.vercel.app';

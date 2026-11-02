@@ -1,22 +1,14 @@
-import 'dart:math' as math;
+import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import 'theme.dart';
 
-double _seg(double t, double a, double b, [Curve curve = Curves.linear]) =>
-    curve.transform(((t - a) / (b - a)).clamp(0.0, 1.0).toDouble());
-
-const _brandStyle = TextStyle(
-  fontSize: 46,
-  fontWeight: FontWeight.w900,
-  fontStyle: FontStyle.italic,
-  color: Colors.white,
-  letterSpacing: -0.5,
-  shadows: [Shadow(color: Color(0x88DDB65B), blurRadius: 18)],
-);
-
-/// Premium intro (about 2.8 s): stadium lights on, golden hammer strikes, emblem is revealed,
-/// the AuctionX name shines in, then the logo zooms through into the app.
-/// It sits on top of the already-loading app, so a slow start never delays the app.
+/// Start-up intro. Order: AuctionX logo fades in, then the intro video plays
+/// (gavel, gold waves, logo reveal), then the logo zooms through into the app.
+/// The video loads in the background while the logo shows, so it starts without a wait.
+/// Tap anywhere to skip. It never blocks the app: if the video cannot play on this device
+/// the logo is shown briefly and the app opens. Reduced motion shows only the logo, no movement.
 class IntroSplash extends StatefulWidget {
   final VoidCallback onDone;
   const IntroSplash({super.key, required this.onDone});
@@ -25,202 +17,150 @@ class IntroSplash extends StatefulWidget {
 }
 
 class _IntroSplashState extends State<IntroSplash> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 2800));
-  bool _done = false;
+  static const _logoTime = Duration(milliseconds: 900);
+  static const _zoomTime = Duration(milliseconds: 800);
+
+  late final AnimationController _zoom = AnimationController(vsync: this, duration: _zoomTime);
+  VideoPlayerController? _video;
+  bool _ready = false; // video loaded
+  bool _noVideo = false; // video could not load on this device
+  bool _logoDone = false; // logo phase finished
+  bool _videoOn = false; // video is shown instead of the logo
+  bool _zooming = false;
+  bool _finished = false;
+  Timer? _logoTimer, _cap;
 
   @override
   void initState() {
     super.initState();
-    _c.addStatusListener((s) {
-      if (s == AnimationStatus.completed) _finish();
-    });
-    Future.delayed(const Duration(milliseconds: 3800), _finish); // safety net: never block the app
+    _prepare(); // start loading the video right away
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (MediaQuery.of(context).disableAnimations) {
-        // reduced motion: show the finished logo briefly, no movement
-        _c.value = 0.72;
-        Future.delayed(const Duration(milliseconds: 600), _finish);
-      } else {
-        _c.forward();
+        _logoTimer = Timer(const Duration(milliseconds: 800), _finish);
+        return;
       }
+      _logoTimer = Timer(_logoTime, _onLogoDone);
+      _cap = Timer(const Duration(seconds: 12), _startZoom); // safety net: never hold the app
     });
   }
 
+  Future<void> _prepare() async {
+    final c = VideoPlayerController.asset('assets/intro.mp4');
+    try {
+      await c.initialize().timeout(const Duration(seconds: 4));
+      if (!mounted) {
+        await c.dispose();
+        return;
+      }
+      _video = c;
+      _ready = true;
+      _tryPlay();
+    } catch (_) {
+      await c.dispose();
+      _noVideo = true;
+      if (_logoDone) _startZoom();
+    }
+  }
+
+  void _onLogoDone() {
+    _logoDone = true;
+    if (_noVideo) {
+      _startZoom(); // video not supported here: logo only, then go in
+    } else {
+      _tryPlay();
+    }
+  }
+
+  void _tryPlay() {
+    final c = _video;
+    if (!mounted || _zooming || !_logoDone || !_ready || c == null || _videoOn) return;
+    // Browsers only allow autoplay when muted, so the web build plays silently.
+    c.setVolume(kIsWeb ? 0 : 1);
+    c.addListener(_checkEnd);
+    setState(() => _videoOn = true);
+    c.play();
+  }
+
+  void _checkEnd() {
+    final v = _video?.value;
+    if (v == null || !v.isInitialized || _zooming) return;
+    if (v.duration > Duration.zero && v.position >= v.duration - const Duration(milliseconds: 150)) {
+      _startZoom();
+    }
+  }
+
+  void _startZoom() {
+    if (!mounted || _zooming) return;
+    _zooming = true;
+    _logoTimer?.cancel();
+    _video?.pause();
+    _zoom.forward().whenComplete(_finish);
+  }
+
   void _finish() {
-    if (_done || !mounted) return;
-    _done = true;
+    if (_finished || !mounted) return;
+    _finished = true;
+    _cap?.cancel();
     widget.onDone();
   }
 
   @override
   void dispose() {
-    _c.dispose();
+    _logoTimer?.cancel();
+    _cap?.cancel();
+    _video?.removeListener(_checkEnd);
+    _video?.dispose();
+    _zoom.dispose();
     super.dispose();
   }
 
-  Widget _brand(double shine) => Row(mainAxisSize: MainAxisSize.min, children: [
-        ShaderMask(
-          shaderCallback: (r) => const LinearGradient(
-                  begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFFFFE9A8), kGold, Color(0xFF9A6A1C)])
-              .createShader(r),
-          child: const Text('Auction', style: _brandStyle),
+  Widget _logoView() => TweenAnimationBuilder<double>(
+        key: const ValueKey('logo'),
+        tween: Tween(begin: 0.0, end: 1.0),
+        duration: const Duration(milliseconds: 700),
+        curve: Curves.easeOutCubic,
+        builder: (context, t, _) => Opacity(
+          opacity: t,
+          child: Transform.scale(
+            scale: 0.85 + 0.15 * t,
+            child: Image.asset('assets/emblem.png', width: 260, height: 260),
+          ),
         ),
-        ShaderMask(
-          shaderCallback: (r) => LinearGradient(
-            begin: Alignment(-1.5 + 3 * shine, -1),
-            end: Alignment(-0.5 + 3 * shine, 1),
-            colors: const [Color(0xFFD62828), Colors.white, Color(0xFFD62828)],
-            stops: const [0.25, 0.5, 0.75],
-          ).createShader(r),
-          child: const Text('X', style: _brandStyle),
+      );
+
+  Widget _videoView(VideoPlayerController v) => SizedBox.expand(
+        key: const ValueKey('video'),
+        child: FittedBox(
+          fit: BoxFit.cover,
+          child: SizedBox(width: v.value.size.width, height: v.value.size.height, child: VideoPlayer(v)),
         ),
-      ]);
+      );
 
   @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-        animation: _c,
-        builder: (context, _) {
-          final t = _c.value;
-          final lights = _seg(t, 0.0, 0.14);
-          final swing = _seg(t, 0.10, 0.27, Curves.easeInQuad);
-          final hammerOut = 1 - _seg(t, 0.34, 0.50);
-          final impact = _seg(t, 0.27, 0.52, Curves.easeOut);
-          final reveal = _seg(t, 0.27, 0.50, Curves.easeOutBack);
-          final name = _seg(t, 0.46, 0.66, Curves.easeOutCubic);
-          final shine = _seg(t, 0.58, 0.84);
-          final zoom = _seg(t, 0.80, 1.0, Curves.easeInCubic);
-          final fade = 1 - _seg(t, 0.92, 1.0);
-          final shake = (t > 0.27 && t < 0.36) ? math.sin(t * 900) * (0.36 - t) * 70 : 0.0;
-          final glow = (120 * reveal.clamp(0.0, 1.0)).round();
-
+  Widget build(BuildContext context) {
+    final v = _video;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _startZoom,
+      child: AnimatedBuilder(
+        animation: _zoom,
+        builder: (context, child) {
+          final z = Curves.easeIn.transform(_zoom.value);
           return Opacity(
-            opacity: fade,
-            child: Container(
-              color: kBg,
-              child: Stack(fit: StackFit.expand, children: [
-                CustomPaint(painter: _StagePainter(lights: lights, impact: impact)),
-                Transform.translate(
-                  offset: Offset(shake, shake * 0.6),
-                  child: Center(
-                    child: Transform.scale(
-                      scale: 1 + zoom * 9,
-                      child: Column(mainAxisSize: MainAxisSize.min, children: [
-                        SizedBox(
-                          width: 260,
-                          height: 260,
-                          child: Stack(alignment: Alignment.center, clipBehavior: Clip.none, children: [
-                            Opacity(
-                              opacity: reveal.clamp(0.0, 1.0).toDouble(),
-                              child: Transform.scale(
-                                scale: 0.55 + 0.45 * reveal,
-                                child: Container(
-                                  decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [
-                                    BoxShadow(color: kGold.withAlpha(glow), blurRadius: 60, spreadRadius: 6),
-                                  ]),
-                                  child: Image.asset('assets/emblem.png', width: 230, height: 230),
-                                ),
-                              ),
-                            ),
-                            if (hammerOut > 0)
-                              Positioned(
-                                left: -40,
-                                top: -50,
-                                child: Opacity(
-                                  opacity: hammerOut.clamp(0.0, 1.0).toDouble(),
-                                  child: Transform.rotate(
-                                    angle: 0.9 - 1.5 * swing,
-                                    alignment: Alignment.bottomRight,
-                                    child: Image.asset('assets/hammer.png', width: 170),
-                                  ),
-                                ),
-                              ),
-                          ]),
-                        ),
-                        const SizedBox(height: 14),
-                        Opacity(
-                          opacity: name,
-                          child: Transform.translate(offset: Offset(0, 18 * (1 - name)), child: _brand(shine)),
-                        ),
-                      ]),
-                    ),
-                  ),
-                ),
-              ]),
-            ),
+            opacity: 1 - z,
+            child: Transform.scale(scale: 1 + 6 * z, child: child),
           );
         },
-      );
-}
-
-class _StagePainter extends CustomPainter {
-  final double lights, impact;
-  _StagePainter({required this.lights, required this.impact});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF07070E), Color(0xFF1B0A12)],
-        ).createShader(rect),
+        child: Container(
+          color: kBg,
+          alignment: Alignment.center,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 400),
+            child: _videoOn && v != null ? _videoView(v) : _logoView(),
+          ),
+        ),
+      ),
     );
-    void glow(Offset c, double r, Color col) => canvas.drawCircle(
-          c,
-          r,
-          Paint()
-            ..shader = RadialGradient(colors: [col.withAlpha((90 * lights).round()), col.withAlpha(0)])
-                .createShader(Rect.fromCircle(center: c, radius: r)),
-        );
-    glow(Offset(size.width * 0.10, size.height * 0.08), size.width * 0.8, const Color(0xFFFFE2A0));
-    glow(Offset(size.width * 0.92, size.height * 0.10), size.width * 0.8, const Color(0xFFFF4A4A));
-    glow(Offset(size.width * 0.5, size.height * 0.98), size.width * 1.0, const Color(0xFFB3141E));
-
-    final dot = Paint()
-      ..color = Colors.white.withAlpha((210 * lights).round())
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
-    for (var i = 0; i < 3; i++) {
-      for (var j = 0; j < 2; j++) {
-        canvas.drawCircle(Offset(size.width * 0.05 + i * 14, size.height * 0.04 + j * 14), 4, dot);
-        canvas.drawCircle(Offset(size.width * 0.95 - i * 14, size.height * 0.04 + j * 14), 4, dot);
-      }
-    }
-
-    if (impact > 0 && impact < 1) {
-      final c = size.center(Offset.zero);
-      final a = ((1 - impact) * 255).round().clamp(0, 255);
-      canvas.drawCircle(
-        c,
-        40 + impact * size.shortestSide * 0.7,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 4 * (1 - impact) + 1
-          ..color = const Color(0xFFFFD87A).withAlpha(a),
-      );
-      canvas.drawCircle(
-        c,
-        20 + impact * size.shortestSide * 0.45,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = const Color(0xFFFF5A5A).withAlpha(a),
-      );
-      final sp = Paint()
-        ..strokeWidth = 2.5
-        ..strokeCap = StrokeCap.round
-        ..color = const Color(0xFFFFE9A8).withAlpha(a);
-      for (var i = 0; i < 18; i++) {
-        final ang = i * math.pi * 2 / 18 + 0.3;
-        final r1 = 60 + impact * 170, r2 = r1 + 16 + 20 * (1 - impact);
-        canvas.drawLine(c + Offset(math.cos(ang) * r1, math.sin(ang) * r1), c + Offset(math.cos(ang) * r2, math.sin(ang) * r2), sp);
-      }
-    }
   }
-
-  @override
-  bool shouldRepaint(_StagePainter o) => o.lights != lights || o.impact != impact;
 }
